@@ -3,6 +3,7 @@ apply plugin: 'idea'
 apply plugin: 'application'
 
 mainClassName = "com.looobo.Main"
+version = '1.0'
 
 repositories {
     mavenCentral()
@@ -18,17 +19,26 @@ dependencies {
     testCompile 'org.mockito:mockito-all:1.10.19'
 }
 
-jar {
-    baseName = 'converter'
-    version = '0.1.0'
-}
-
 task wrapper(type: Wrapper) {
     gradleVersion = '2.0'
 }
+
 test {
     testLogging {
         events "passed", "skipped", "failed", "standardOut", "standardError"
     }
 }
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'converter',
+                'Implementation-Version': version,
+                'Main-Class': mainClassName
+    }
+
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+build.dependsOn(fatJar)
 
