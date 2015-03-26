@@ -1,19 +1,19 @@
 package com.looobo.converter.impl;
 
 import com.google.common.collect.Maps;
-import com.looobo.converter.DefinitionLoaderInterface;
+import com.looobo.converter.ConfigureLoaderInterface;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 
-public class TableDefinitionLoader implements DefinitionLoaderInterface {
-    private static Logger logger = Logger.getLogger(TableDefinitionLoader.class);
+public class ConfigureLoader implements ConfigureLoaderInterface {
+    private static Logger logger = Logger.getLogger(ConfigureLoader.class);
 
     private String definitionFileName = "";
 
-    public TableDefinitionLoader(String definitionFileName) {
+    public ConfigureLoader(String definitionFileName) {
         this.definitionFileName = definitionFileName;
     }
 
@@ -22,7 +22,7 @@ public class TableDefinitionLoader implements DefinitionLoaderInterface {
     }
 
     @Override
-    public Map<String, Object> getDefinition(ClassLoader loader) {
+    public Map<String, Object> getConfigure(ClassLoader loader) {
         Properties properties = new Properties();
 
         try {
@@ -34,3 +34,4 @@ public class TableDefinitionLoader implements DefinitionLoaderInterface {
         return Maps.newHashMap((Map) properties);
     }
 }
+

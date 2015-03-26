@@ -3,14 +3,16 @@ package com.looobo.converter;
 public enum Columns {
     //1. #2015年3月份临时救助申报基本情况表.xls
     INDEX("index"),
-    IDENTITY("identity_id"),
     NAME("name"),
     AGE("age"),
+    FAMILY_MEMBERS("family_members"),
+    IDENTITY("identity_id"),
     ADDRESS("family_address"),
     HOME_BACKGROUND("home_background"),
     VILLAGE_AMOUNT("village_amount"),
     ALLOWANCES_AMOUNT("allowances_amount"),
     TOWN_AMOUNT("town_amount"),
+    //OTHER("other"),
 
     //2. #2015年3月农村低保备案表.xls
     //INDEX("index"),
