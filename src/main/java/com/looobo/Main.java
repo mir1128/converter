@@ -35,29 +35,28 @@ public class Main {
 
             String filePath = "/Users/jieliu/Downloads/xlses/" + tableKey + ".xls";
             for (int i = 0; i < sheets; ++i) {
-                List<String> sqlList = generateSql(filePath, i, columns.get(i), rowRange.get(i), columnRange.get(i));
+                List<String> sqlList = generateSql(tableKey, filePath, i, columns.get(i), rowRange.get(i), columnRange.get(i));
                 System.out.println(sqlList);
             }
 
         }
     }
 
-    public static List<String> generateSql(String filePath,
+    public static List<String> generateSql(String tableKey,
+                                           String filePath,
                                            int sheetIndex,
                                            List<String> columns,
                                            Map.Entry<Integer, Integer> rowRange,
                                            Map.Entry<Integer, Integer> columnRanges) {
-
-        System.out.println(filePath);
-        System.out.println(columns);
-        System.out.println(rowRange);
-        System.out.println(columnRanges);
-        System.out.println("---------------------");
+        logger.info("filePath : " + filePath + " sheetIndex : " + sheetIndex
+                + " columns : " + columns + " rowRange : " + rowRange
+                + " columnRanges" + columnRanges);
 
         String tempFile = "/tmp" + filePath.substring(filePath.lastIndexOf("/"));
 
         Copy(filePath, tempFile);
 
+        List<String> values = new ArrayList<>();
         try {
             Workbook workbook = Workbook.getWorkbook(new File(tempFile));
             Sheet sheet = workbook.getSheet(sheetIndex);
@@ -70,22 +69,39 @@ public class Main {
                 return null;
             }
 
-            List<String> values = new ArrayList<>();
             for (int i = rowRange.getKey(); i < rowRange.getValue(); ++i) {
                 String result = "";
                 for (int j = columnRanges.getKey(); j < columnRanges.getValue(); ++j) {
-                    result += sheet.getCell(j, i).getContents() + ",";
+                    result += sheet.getCell(j, i).getContents() + ((j == columnRanges.getValue() - 1) ? "" : ",");
                 }
                 values.add(result);
-            }
-
-            for (String s : values) {
-                System.out.println(s);
             }
         } catch (IOException e) {
             logger.error(tempFile + "does not exist.");
             logger.error(e.fillInStackTrace());
         } catch (BiffException e) {
+        }
+
+        String sqlPath = "/tmp/" + tableKey + ".sql";
+        File file = new File(sqlPath);
+
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            logger.info(e.fillInStackTrace());
+        }
+
+        try {
+            FileWriter fileWriter = new FileWriter(file.getAbsoluteFile(), true);
+            BufferedWriter bufferWriter = new BufferedWriter(fileWriter);
+
+            for (String content : values) {
+                bufferWriter.write("insert into " + tableKey + " values (" + content + " )\n");
+            }
+
+            bufferWriter.close();
+        } catch (IOException e) {
+            logger.info(e.fillInStackTrace());
         }
 
         return null;
