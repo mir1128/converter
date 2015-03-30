@@ -26,6 +26,8 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        deleteSqlFiles();
+
         for (String tableKey : tableKeys) {
             ConfigureParser configureParser = new ConfigureParser(tableKey);
             int sheets = configureParser.getSheets();
@@ -34,15 +36,25 @@ public class Main {
             List<Map.Entry<Integer, Integer>> columnRange = configureParser.getColumnRange();
 
             String filePath = "/Users/jieliu/Downloads/xlses/" + tableKey + ".xls";
+
             for (int i = 0; i < sheets; ++i) {
                 List<String> sqlList = generateSql(tableKey, filePath, i, columns.get(i), rowRange.get(i), columnRange.get(i));
-                System.out.println(sqlList);
+                dumpSqls(tableKey, sqlList);
             }
-
         }
     }
 
-    public static List<String> generateSql(String tableKey,
+    private static void deleteSqlFiles() {
+        for (String tableKey : tableKeys) {
+            String fileName = "./" + tableKey + ".sql";
+            File file = new File(fileName);
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+    }
+
+    private static List<String> generateSql(String tableKey,
                                            String filePath,
                                            int sheetIndex,
                                            List<String> columns,
@@ -52,7 +64,7 @@ public class Main {
                 + " columns : " + columns + " rowRange : " + rowRange
                 + " columnRanges" + columnRanges);
 
-        String tempFile = "/tmp" + filePath.substring(filePath.lastIndexOf("/"));
+        String tempFile = "./" + filePath.substring(filePath.lastIndexOf("/"));
 
         Copy(filePath, tempFile);
 
@@ -72,17 +84,21 @@ public class Main {
             for (int i = rowRange.getKey(); i < rowRange.getValue(); ++i) {
                 String result = "";
                 for (int j = columnRanges.getKey(); j < columnRanges.getValue(); ++j) {
-                    result += sheet.getCell(j, i).getContents() + ((j == columnRanges.getValue() - 1) ? "" : ",");
+                    result += "\"" + sheet.getCell(j, i).getContents() + "\""
+                            + ((j == columnRanges.getValue() - 1) ? "" : ",");
                 }
                 values.add(result);
             }
         } catch (IOException e) {
             logger.error(tempFile + "does not exist.");
-            logger.error(e.fillInStackTrace());
         } catch (BiffException e) {
         }
 
-        String sqlPath = "/tmp/" + tableKey + ".sql";
+        return values;
+    }
+
+    private static void dumpSqls(String tableKey, List<String> values) {
+        String sqlPath = "./" + tableKey + ".sql";
         File file = new File(sqlPath);
 
         try {
@@ -103,11 +119,9 @@ public class Main {
         } catch (IOException e) {
             logger.info(e.fillInStackTrace());
         }
-
-        return null;
     }
 
-    public static void Copy(String oldPath, String newPath) {
+    private static void Copy(String oldPath, String newPath) {
         try {
             int bytesum = 0;
             int byteread = 0;
