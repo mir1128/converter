@@ -26,7 +26,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        deleteSqlFiles();
+        deleteSqlFiles(".sql");
 
         for (String tableKey : tableKeys) {
             ConfigureParser configureParser = new ConfigureParser(tableKey);
@@ -35,18 +35,23 @@ public class Main {
             List<Map.Entry<Integer, Integer>> rowRange = configureParser.getRowRange();
             List<Map.Entry<Integer, Integer>> columnRange = configureParser.getColumnRange();
 
-            String filePath = "/Users/jieliu/Downloads/xlses/" + tableKey + ".xls";
+            if (!args[0].endsWith("/")) {
+                args[0] += "/";
+            }
+            String filePath = args[0] + tableKey + ".xls";
 
             for (int i = 0; i < sheets; ++i) {
                 List<String> sqlList = generateSql(tableKey, filePath, i, columns.get(i), rowRange.get(i), columnRange.get(i));
                 dumpSqls(tableKey, sqlList);
             }
         }
+
+        deleteSqlFiles(".xls");
     }
 
-    private static void deleteSqlFiles() {
+    private static void deleteSqlFiles(String extName) {
         for (String tableKey : tableKeys) {
-            String fileName = "./" + tableKey + ".sql";
+            String fileName = "./" + tableKey + extName;
             File file = new File(fileName);
             if (file.exists()) {
                 file.delete();
@@ -55,11 +60,11 @@ public class Main {
     }
 
     private static List<String> generateSql(String tableKey,
-                                           String filePath,
-                                           int sheetIndex,
-                                           List<String> columns,
-                                           Map.Entry<Integer, Integer> rowRange,
-                                           Map.Entry<Integer, Integer> columnRanges) {
+                                            String filePath,
+                                            int sheetIndex,
+                                            List<String> columns,
+                                            Map.Entry<Integer, Integer> rowRange,
+                                            Map.Entry<Integer, Integer> columnRanges) {
         logger.info("filePath : " + filePath + " sheetIndex : " + sheetIndex
                 + " columns : " + columns + " rowRange : " + rowRange
                 + " columnRanges" + columnRanges);
