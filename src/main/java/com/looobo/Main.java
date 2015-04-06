@@ -28,8 +28,12 @@ public class Main {
     public static void main(String[] args) {
         deleteSqlFiles(".sql");
 
+        if (args.length != 2) {
+            System.out.println("usage: java -jar converter-1.0.jar [file directory] table_definition.properties");
+        }
+
         for (String tableKey : tableKeys) {
-            ConfigureParser configureParser = new ConfigureParser(tableKey);
+            ConfigureParser configureParser = new ConfigureParser(tableKey, args[1]);
             int sheets = configureParser.getSheets();
             List<List<String>> columns = configureParser.getColumns();
             List<Map.Entry<Integer, Integer>> rowRange = configureParser.getRowRange();
