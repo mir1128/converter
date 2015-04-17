@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -28,25 +29,32 @@ public class Main {
     public static void main(String[] args) {
         deleteSqlFiles(".sql");
 
-        if (args.length != 2) {
+        String xlsesPath = "";
+        String propertiesPath = "";
+        if (args.length < 2) {
             System.out.println("usage: java -jar converter-1.0.jar [file directory] table_definition.properties");
+            xlsesPath = args[0];
+            propertiesPath = null;
+        } else {
+            xlsesPath = args[0];
+            propertiesPath = args[1];
         }
 
         for (String tableKey : tableKeys) {
-            ConfigureParser configureParser = new ConfigureParser(tableKey, args[1]);
+            ConfigureParser configureParser = new ConfigureParser(tableKey, propertiesPath);
             int sheets = configureParser.getSheets();
             List<List<String>> columns = configureParser.getColumns();
             List<Map.Entry<Integer, Integer>> rowRange = configureParser.getRowRange();
             List<Map.Entry<Integer, Integer>> columnRange = configureParser.getColumnRange();
 
-            if (!args[0].endsWith("/")) {
-                args[0] += "/";
+            if (!xlsesPath.endsWith("/")) {
+                xlsesPath += "/";
             }
-            String filePath = args[0] + tableKey + ".xls";
+            String filePath = xlsesPath + tableKey + ".xls";
 
             for (int i = 0; i < sheets; ++i) {
                 List<String> sqlList = generateSql(tableKey, filePath, i, columns.get(i), rowRange.get(i), columnRange.get(i));
-                dumpSqls(tableKey, sqlList);
+                dumpSqls(tableKey + "_" + i, sqlList, columns.get(i));
             }
         }
 
@@ -106,7 +114,7 @@ public class Main {
         return values;
     }
 
-    private static void dumpSqls(String tableKey, List<String> values) {
+    private static void dumpSqls(String tableKey, List<String> values, List<String> columns) {
         String sqlPath = "./" + tableKey + ".sql";
         File file = new File(sqlPath);
 
@@ -116,12 +124,26 @@ public class Main {
             logger.info(e.fillInStackTrace());
         }
 
+        int identityIndex = columns.indexOf("identity_id");
+        if (identityIndex == -1) {
+            logger.error(tableKey + "identityIndex equals -1 and the sql did not generated.");
+            return;
+        }
+
         try {
             FileWriter fileWriter = new FileWriter(file.getAbsoluteFile(), true);
             BufferedWriter bufferWriter = new BufferedWriter(fileWriter);
 
             for (String content : values) {
-                bufferWriter.write("insert into " + tableKey + " values (" + content + " )\n");
+                List<String> section = Arrays.asList(content.split(","));
+                if (section.get(identityIndex).length() == 2) {
+                    continue;
+                }
+                String sql = "insert into " + tableKey + " values (" + content + " );";
+                sql.replace("\n", "");
+                sql.replace("\r", "");
+                sql += "\n";
+                bufferWriter.write(sql);
             }
 
             bufferWriter.close();
